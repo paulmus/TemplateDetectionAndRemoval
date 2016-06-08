@@ -1,12 +1,13 @@
 package algorithm;
 
 import org.htmlcleaner.TagNode;
+import org.w3c.dom.Node;
 
 public class Backtracking {
 	
 	int operation = 0;
 	
-	TagNode source = null;
+	Node source = null;
 	
 	int cost = 0;
 	
@@ -24,11 +25,11 @@ public class Backtracking {
 		this.operation = operation;
 	}
 
-	public TagNode getSource() {
+	public Node getSource() {
 		return source;
 	}
 
-	public void setSource(TagNode source) {
+	public void setSource(Node source) {
 		this.source = source;
 	}
 

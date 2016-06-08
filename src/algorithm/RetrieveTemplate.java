@@ -1,9 +1,9 @@
 package algorithm;
 
 import java.util.ArrayList;
-import java.util.Collection;
 
-import org.htmlcleaner.TagNode;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * @author paulmuschiol
@@ -35,7 +35,7 @@ public class RetrieveTemplate {
 	 */
 	ArrayList<Integer> res = null;
 	
-	ArrayList<TagNode> res2 = null;
+	ArrayList<Node> res2 = null;
 	
 	public RetrieveTemplate(Backtracking[][] _backtracking){
 		B = _backtracking;
@@ -48,7 +48,7 @@ public class RetrieveTemplate {
 		
 		res = new ArrayList<Integer>();
 		
-		res2 = new ArrayList<TagNode>();
+		res2 = new ArrayList<Node>();
 	}
 	
 	
@@ -69,43 +69,45 @@ public class RetrieveTemplate {
 		int i = m;
 		int j = n;
 		
+		
+		
 		while(i>1 && j>1){
 			
-//			System.out.println(i+" "+j);
+			System.out.println((i-1)+" "+(j-1)+"cost"+B[i-1][j-1].getCost()+" "+B[i-2][j-2].getCost()+"mode"+B[i-1][j-1].getOperation()+"node"+B[i-1][j-1].getSource().getNodeName()+B[i-1][j-1].getSource().getTextContent().trim());
+			
+
 			
 			if(B[i-1][j-1].getOperation() == 1){ //delete
 				
-				System.out.println("ins");
-				j--;
+				System.out.println("±±±±±±±±"+B[i-1][j-1].getSource().getNodeName());
+				i--;
 				
 				//go left
 			}else if(B[i-1][j-1].getOperation() == 2){ //insert
-				
-				System.out.println("ins");
-				i--;
+
+				System.out.println("±±±±±±±±"+"±±±±±±±±"+B[i-1][j-1].getSource().getNodeName());
+				j--;
 				
 				//go right
 			}else if(B[i-1][j-1].getOperation() == 3 && B[i-2][j-2].getCost()==B[i-1][j-1].getCost()){  //update
-				TagNode src = B[i-1][j-1].getSource();
-				res.add(getHashOfNode(src));
+				Node src = B[i-1][j-1].getSource();
+
 				
 				res2.add(src);
 				
-//				System.out.println("#"+src.getName()+src.getAttributeByName("id")+src.getAttributeByName("class")+src.getText()+"\n");
+				System.out.println("++"+src.getNodeName());
+				
+				if(src.hasChildNodes()){
+					ArrayList<Node> d = new ArrayList<Node>();
+					getDescendants(src,d);
+					
+
+					
+					res2.addAll(d);
+				}
 				
 				
-				//order is important, first all subnodes then the real one
-//				ArrayList<Integer> descs = new ArrayList<Integer>();
-//				getDescendants(src,descs); //-> not neccessary to add descendants, because deleting of whole subtree in this case
 				
-				ArrayList<TagNode> d = new ArrayList<TagNode>();
-				getDescendants(src,d);
-				//System.out.println("**"+d.size());
-				
-				res2.addAll(d);
-				
-//				
-//				res.addAll(descs);
 				
 				
 
@@ -118,40 +120,56 @@ public class RetrieveTemplate {
 			}else if(B[i-1][j-1].getOperation() == 4){ //no_op
 				
 				
-				TagNode src = B[i-1][j-1].getSource();
-				res.add(getHashOfNode(src)); 
 				
+				Node src = B[i-1][j-1].getSource();
 				res2.add(src);
-				//add the root node -> it is template,
-				//decide for each descenadnt itself if its template or not
-//				System.out.println("##"+src.getName()+src.getText()+"\n");
 				
+				
+				
+				System.out.println("+++"+src.getNodeName());
 				//process recursive call
 				RetrieveTemplate recursive = new RetrieveTemplate(B[i-1][j-1].getNext());
 				recursive.getTemplate();
-				
-				//System.out.println("###"+recursive.getRes().size());
-				//System.out.println("*"+recursive.getRes2().size());
+				System.out.println("&&&&&"+recursive.getRes2().size());
 				res2.addAll(recursive.getRes2());
 				
-				res.addAll(recursive.getRes());
+				
+				
+//				if(recursive.getRes2().isEmpty()){ // there is an duplicate node inside
+//					//dont add it, because there is an left fitting node maybe
+//					j--;
+//				}else{
+//					res2.add(src);
+//					res2.addAll(recursive.getRes2());
+//					i--;
+//					j--;
+//				}
 				
 				i--;
 				j--;
+
+
+				
 				
 				//go left and up
+			}else{
+				i--;
+				j--;
 			}
+			
+			
 			
 		}
 		
 		
 		
+
 		
 
 		
 	}
 	
-	public ArrayList<TagNode> getRes2() {
+	public ArrayList<Node> getRes2() {
 		// TODO Auto-generated method stub
 		return res2;
 	}
@@ -162,15 +180,17 @@ public class RetrieveTemplate {
 	 * @param _node root node
 	 * @param _tagList ordered list
 	 */
-	private void getDescendants(TagNode _node, ArrayList<TagNode> _tagList){
+	private static void getDescendants(Node _node, ArrayList<Node> _tagList){
 		
 
 		
-		for( TagNode child : _node.getChildTagList()){
+		NodeList a = _node.getChildNodes();
+		
+		for( int u=0; u<a.getLength(); u++){
 			
-			getDescendants(child, _tagList);
+			getDescendants(a.item(u), _tagList);
 			
-			_tagList.add(child);
+			_tagList.add(a.item(u));
 			
 			
 		}
@@ -183,42 +203,8 @@ public class RetrieveTemplate {
 		return res;
 	}
 
-	/**
-	 * calculate hash of node by its name, and id,class,href attributes
-	 * @param _tn Node to hash
-	 * @return hash of this node
-	 */
-	private int getHashOfNode(TagNode _tn){
-		
-		
-		String f = _tn.getName()+_tn.getAttributeByName("href")+_tn.getAttributeByName("alt")+_tn.getAttributeByName("title")+_tn.getAttributeByName("src");
-
-		
-		if(_tn.getChildTags().length == 0){
-			f += _tn.getText();
-		}
-		
-		return f.hashCode();
-		
-		
-//		return (_tn.getName()+_tn.getText()).hashCode();
-		
-		
-	}
 
 
-//	private void addDescendants(TagNode src, ArrayList<Integer> res2) {
-//		
-//		ArrayList<TagNode> descs = new ArrayList<TagNode>();
-//		
-//		getDescendants(src,descs);
-//		
-//		for(TagNode tn : descs){
-//			res2.add(getHashOfNode(tn));
-//		}
-//		
-//		
-//	}
 	
 	
 

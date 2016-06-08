@@ -3,16 +3,42 @@ package importFiles;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.htmlcleaner.CleanerProperties;
 import org.htmlcleaner.HtmlCleaner;
 import org.htmlcleaner.SimpleHtmlSerializer;
 import org.htmlcleaner.TagNode;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+
+import algorithm.ExtractSubtree;
+import algorithm.TreeMapping;
 
 
 public class DomCrawler {
+	
+	
+	private final int MAX_DOCUMENTS_TEMPLATE = 15;
+	
+	private Document templateTree = null;
+	
+	ArrayList<String> filenames = null;
+	
 	
 	/**
 	 * name of the folder (website) working on
@@ -22,7 +48,7 @@ public class DomCrawler {
 	/**
 	 * all websites parsed
 	 */
-	ArrayList<TagNode> doms = null;
+	ArrayList<Document> doms = null;
 	
 	/**
 	 * html cleaner config
@@ -39,6 +65,8 @@ public class DomCrawler {
 	
 	public DomCrawler( String _folder ){
 		
+		
+		
 		//ignore comments
 		props.setOmitComments(true);
 		//remove script and style
@@ -50,12 +78,86 @@ public class DomCrawler {
 		//retrieve all documents in folder
 		getDoms();
 		
+		getTemplates();
+		
+		getTemplateDom();
+		
+		getContents();
+		
 
 		
-		TagNode resultTree = null;
+		
+			
+			
+		
+		
+
+
+		
+	}
+
+
+	private void getTemplateDom() {
+		
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder builder = null;
+		
+		try {
+			builder = factory.newDocumentBuilder();
+		} catch (ParserConfigurationException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+	
+
+		
+		String templateFile = null;
+		if(folderName.endsWith("/")){
+			templateFile = "html/"+folderName+"template/template.html";
+		}else{
+			templateFile = "html/"+folderName+"/template/template.html";
+		}
+		
+		File f = new File(templateFile);
+		
+		if(f.isFile() && f.exists()){
+
+			try{		
+				
+				Document doc = builder.parse(f);
+
+					
+				if(doc != null){
+					templateTree = doc;
+				}
+			
+			}catch(Exception e){
+				
+			}
+					
+					
+		}
+		
+
+		
+	}
+
+
+	private void getTemplates(){
+		
+		
+		int counter = 0;
+		
+		int max = MAX_DOCUMENTS_TEMPLATE;
+		
+		if(max > doms.size()){
+			max = doms.size();
+		}
+		
+		Node resultTree = null;
 		
 		//process the documents
-		for(int i = 0; i<5; i++){
+		for(int i = 0; i<max; i++){
 			
 			System.out.println("#"+i);
 			
@@ -63,70 +165,79 @@ public class DomCrawler {
 			
 			if(resultTree == null){
 				
-				es = new ExtractSubtree(doms.get(i),doms.get(i+1));
+				es = new ExtractSubtree(doms.get(0),doms.get(1));
 				i++;
 				
-				resultTree = es.getResultTree();
 				
-				try {
-					
-					File k = new File("html/"+folderName+"/template");
-					if(k.exists() && k.isDirectory()){
-						htmlSerializer.writeToFile(resultTree, "html/"+folderName+"/template/template"+(l++)+".html", "utf-8");
-					}else{
-						k.mkdir();
-						htmlSerializer.writeToFile(resultTree, "html/"+folderName+"/template"+(l++)+".html", "utf-8");
-					}
-					
-					
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				resultTree = es.getSmallestSubtree();
 				
 			}else{
 				
-				if(matchTemplate(doms.get(i),resultTree)){
-					
-					//matches -> nothing to do
-					
-					System.out.println("match");
-					
-				}else{
-					es = new ExtractSubtree(resultTree,doms.get(i));
-					
-					resultTree = es.getResultTree();
-					
-					try {
-						
-						File k = new File("html/"+folderName+"/template");
-						if(k.exists() && k.isDirectory()){
-							htmlSerializer.writeToFile(resultTree, "html/"+folderName+"/template/template"+(l++)+".html", "utf-8");
-						}else{
-							k.mkdir();
-							htmlSerializer.writeToFile(resultTree, "html/"+folderName+"/template"+(l++)+".html", "utf-8");
-						}
-						
-						
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					
-				}
+	
+				es = new ExtractSubtree(resultTree,doms.get(i));
 				
+				resultTree = es.getSmallestSubtree();
 				
+	
+			
 				
 			}
 			
-			
-			
-			
-		
+			if(es.isHasChanged()){ //if has changed output file
+				try {
+					
+					File f = null;
+					if(i == MAX_DOCUMENTS_TEMPLATE-1){
+						f = new File("html/"+folderName+"/template/template.html");
+						
+					}else{
+						f = new File("html/"+folderName+"/template/"+(counter++)+".html");
+						
+					}
+					f.createNewFile();
+					FileOutputStream fos = new FileOutputStream(f);
+					printDocument(resultTree,fos);
+					fos.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (TransformerException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
 		}
-
-
+	}
+	
+	
+	private void getContents(){
 		
+		
+		Node resultTree = null;
+		
+		//process the documents
+		for(int i = 0; i<doms.size(); i++){
+			
+			ExtractSubtree es = new ExtractSubtree(doms.get(i),templateTree);
+			resultTree = es.getContentTree();
+			
+
+			try {
+				
+				File f = new File("html/"+folderName+"/content/"+filenames.get(i));
+				f.createNewFile();
+				FileOutputStream fos = new FileOutputStream(f);
+				printDocument(resultTree,fos);
+				fos.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (TransformerException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
 	}
 	
 	
@@ -137,14 +248,25 @@ public class DomCrawler {
 	private void getDoms(){
 		
 
+		
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder builder = null;
+		try {
+			builder = factory.newDocumentBuilder();
+		} catch (ParserConfigurationException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+
 		int q = 0;
 
 		
 		String newFolder = null;
 		if(folderName.endsWith("/")){
-			newFolder = "html/"+folderName+"";
+			newFolder = "html/"+folderName+"cleaned";
 		}else{
-			newFolder = "html/"+folderName+"/";
+			newFolder = "html/"+folderName+"/cleaned";
 		}
 		
 		File f = new File(newFolder);
@@ -153,6 +275,10 @@ public class DomCrawler {
 			
 			//get all files in the directory
 			File[] docs = f.listFiles();
+			
+			
+			
+			
 			
 			
 			
@@ -165,21 +291,20 @@ public class DomCrawler {
 					System.out.println(z.getName()+q++);
 					
 					try{		
+						
+						Document doc = builder.parse(z);
+
 
 					
-					TagNode tagNode = new HtmlCleaner(props).clean(
-							new FileInputStream(z)
-						);
-					
-					//tagNode = tagNode.findElementByName("body", false);
-					
-					if(tagNode != null){
+					if(doc != null){
 						if(doms != null){
-							
-							doms.add(tagNode);
+							filenames.add(z.getName());
+							doms.add(doc);
 						}else{
-							doms = new ArrayList<TagNode>();
-							doms.add(tagNode);
+							doms = new ArrayList<Document>();
+							filenames = new ArrayList<String>();
+							doms.add(doc);
+							filenames.add(z.getName());
 						}
 					}
 					
@@ -204,110 +329,26 @@ public class DomCrawler {
 	}
 	
 	
-	/**
-	 * check if the all nodes of the templateTree are also in
-	 * the newTree
-	 * two nodes can be not in the tree
-	 * for menu items with class = "actualPage" ore something
-	 * @param _newTree tree to compare with
-	 * @param _templateTree returned templateTree of the last step
-	 * @return if the _newTree match all template nodes
-	 */
-	private boolean matchTemplate(TagNode _newTree, TagNode _templateTree){
-		
-		//get all nodes of the template Tree as hash
-		ArrayList<TagNode> template_nodes = new ArrayList<TagNode>();
-		getDescendants(_templateTree, template_nodes);
-		ArrayList<Integer> template_nodeHash = new ArrayList<Integer>();
-		System.out.println("template_nodesize"+template_nodes.size());
-		for(TagNode tn : template_nodes){
-			template_nodeHash.add(getHashOfNode(tn));
-		}
-		
-		
-		//get all nodes of the new Tree as hash
-		ArrayList<TagNode> nodes = new ArrayList<TagNode>();
-		getDescendants(_newTree, nodes);
-		ArrayList<Integer> nodeHash = new ArrayList<Integer>();
-		System.out.println("nodesize"+nodes.size());
-		for(TagNode tn : nodes){
-			nodeHash.add(getHashOfNode(tn));
-		}
-		
-		
-		//check if every template node is also in the new tree
-		
-		int errorcounter = 0;
-		
-		int q = 0;
-		
-		for(int template : template_nodeHash){
-			
-			if(!nodeHash.contains(template)){
-				
-				TagNode u = template_nodes.get(q);
-				//System.out.println(u.getName()+" "+u.getAttributeByName("id")+" "+u.getAttributeByName("class"));
-				errorcounter++;
-			}else{
-				q++;
-			}
-			
-			
-		}
-		
-		System.out.println("right nodes"+q+" wrong nodes "+errorcounter);
-		
-		if(errorcounter<2){
-			return true;
-		}else{
-			return false;
-		}
 
-		
-	}
+
 	
-	/**
-	 * calculate hash of node by its name, and id,class,href attributes
-	 * @param _tn Node to hash
-	 * @return hash of this node
-	 */
-	private int getHashOfNode(TagNode _tn){
-		
-		String f = _tn.getName()+_tn.getAttributeByName("href")+_tn.getAttributeByName("alt")+_tn.getAttributeByName("title")+_tn.getAttributeByName("src");
 
-		
-		if(_tn.getChildTags().length == 0){
-			f += _tn.getText();
-		}
-		
-		return f.hashCode();
-		
-		
-//		return (_tn.getName()+_tn.getText()).hashCode();
-		
-	}
 	
-	/**
-	 * post order traversal of a given node
-	 * @param _node root node
-	 * @param _tagList ordered list
-	 */
-	private static void getDescendants(TagNode _node, ArrayList<TagNode> _tagList){
-		
-		for( TagNode child : _node.getChildTagList()){
-			
-			getDescendants(child, _tagList);
-			
-			_tagList.add(child);
-			
-			
-		}
+	public static void printDocument(Node doc, OutputStream out) throws IOException, TransformerException {
+	    TransformerFactory tf = TransformerFactory.newInstance();
+	    Transformer transformer = tf.newTransformer();
+	    transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+	    transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+	    transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+	    transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+	    transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
 
-		
+	    transformer.transform(new DOMSource(doc), 
+	         new StreamResult(new OutputStreamWriter(out, "UTF-8")));
 	}
 	
 	public static void main(String[] args){
-		new DomCrawler("wilhelm-meier-online.de");
+		new DomCrawler("scheufelen.com");
 	}
 
 }
