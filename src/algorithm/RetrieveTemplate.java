@@ -29,13 +29,9 @@ public class RetrieveTemplate {
 	Backtracking[][] B = null;
 	
 	
-	/**
-	 * list of hash equivalents of nodes that
-	 * belong to the template
-	 */
-	ArrayList<Integer> res = null;
+
 	
-	ArrayList<Node> res2 = null;
+	ArrayList<Node> res = null;
 	
 	public RetrieveTemplate(Backtracking[][] _backtracking){
 		B = _backtracking;
@@ -44,11 +40,9 @@ public class RetrieveTemplate {
 		
 		n = B[0].length;
 		
+
 		
-		
-		res = new ArrayList<Integer>();
-		
-		res2 = new ArrayList<Node>();
+		res = new ArrayList<Node>();
 	}
 	
 	
@@ -73,45 +67,31 @@ public class RetrieveTemplate {
 		
 		while(i>1 && j>1){
 			
-			System.out.println((i-1)+" "+(j-1)+"cost"+B[i-1][j-1].getCost()+" "+B[i-2][j-2].getCost()+"mode"+B[i-1][j-1].getOperation()+"node"+B[i-1][j-1].getSource().getNodeName()+B[i-1][j-1].getSource().getTextContent().trim());
+//			System.out.println((i-1)+" "+(j-1)+"cost"+B[i-1][j-1].getCost()+" "+B[i-2][j-2].getCost()+"mode"+B[i-1][j-1].getOperation()+"node");
 			
 
 			
 			if(B[i-1][j-1].getOperation() == 1){ //delete
-				
-				System.out.println("±±±±±±±±"+B[i-1][j-1].getSource().getNodeName());
+
 				i--;
 				
 				//go left
 			}else if(B[i-1][j-1].getOperation() == 2){ //insert
 
-				System.out.println("±±±±±±±±"+"±±±±±±±±"+B[i-1][j-1].getSource().getNodeName());
 				j--;
 				
 				//go right
 			}else if(B[i-1][j-1].getOperation() == 3 && B[i-2][j-2].getCost()==B[i-1][j-1].getCost()){  //update
 				Node src = B[i-1][j-1].getSource();
-
-				
-				res2.add(src);
-				
-				System.out.println("++"+src.getNodeName());
+	
+				res.add(src);
 				
 				if(src.hasChildNodes()){
 					ArrayList<Node> d = new ArrayList<Node>();
 					getDescendants(src,d);
 					
-
-					
-					res2.addAll(d);
+					res.addAll(d);
 				}
-				
-				
-				
-				
-				
-
-				
 				
 				i--;
 				j--;
@@ -122,16 +102,12 @@ public class RetrieveTemplate {
 				
 				
 				Node src = B[i-1][j-1].getSource();
-				res2.add(src);
+				res.add(src);
 				
-				
-				
-				System.out.println("+++"+src.getNodeName());
 				//process recursive call
 				RetrieveTemplate recursive = new RetrieveTemplate(B[i-1][j-1].getNext());
 				recursive.getTemplate();
-				System.out.println("&&&&&"+recursive.getRes2().size());
-				res2.addAll(recursive.getRes2());
+				res.addAll(recursive.getRes());
 				
 				
 				
@@ -169,10 +145,7 @@ public class RetrieveTemplate {
 		
 	}
 	
-	public ArrayList<Node> getRes2() {
-		// TODO Auto-generated method stub
-		return res2;
-	}
+
 
 
 	/**
@@ -197,11 +170,14 @@ public class RetrieveTemplate {
 
 		
 	}
-
-
-	public ArrayList<Integer> getRes() {
+	
+	
+	public ArrayList<Node> getRes() {
+		
+		
 		return res;
 	}
+
 
 
 

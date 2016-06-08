@@ -45,6 +45,8 @@ public class cleanHTML {
 		
 		props.setTranslateSpecialEntities(true);
 		
+		props.setNamespacesAware(false);
+		
 		props.setAdvancedXmlEscape(false);
 		
 		
@@ -79,7 +81,7 @@ public class cleanHTML {
 			
 			String finalFilename = newPathname+newFilename;
 			
-			System.out.println(finalFilename);
+
 			
 //			File outputFile = new File(finalFilename);
 //			if(!outputFile.exists()){
@@ -129,8 +131,6 @@ public class cleanHTML {
 	
 	public void cleanAllFiles(String _path){
 		
-		System.out.println(_path);
-		
 		File f = new File(_path);
 		
 		if(f.isDirectory() && f.exists()){
@@ -143,7 +143,7 @@ public class cleanHTML {
 					
 					cleanAllFiles(_path+files[i]+"/");
 				}else if(o.isFile() && !o.isHidden() && files[i].contains(".html")){
-					System.out.println(files[i]);
+					
 					cleanFile(_path+files[i]+"/");
 					
 				}

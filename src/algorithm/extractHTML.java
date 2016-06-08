@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -24,35 +25,16 @@ public class extractHTML {
 	 * */
 	String outLocation = "html/";
 	
-	/**
-	 * a <code>ArrayList</code> of my documents
-	 * */
-	List<String> myDocs = Arrays.asList(
-
-		"sanosil-service.de",
-		"santex-gmbh.de",
-		"scheidle.eu",
-		"scheufelen.com",
-		"schiller-gruppe.de",
-		"sohard.de",
-		"starke-rechtsanwaelte.de",
-		"steinrueck.de",
-		"tanquid.com",
-		"tecklenborg-kegel.de",
-		"tippertie.com",
-		"vacu-form.de",
-		"varial.de",
-		"venti-oelde.de",
-		"welser.com",
-		"wichmann.de",
-		"wilhelm-meier-online.de",
-		"wisap.de",
-		"wisy.de",
-		"zwt-engineering.com"
-			
-			);
+	ArrayList<String> myDocs = null;
 	
-	public extractHTML() {}
+
+	
+	public extractHTML(String _trecLoc, ArrayList<String> docs) {
+		trecLocation = _trecLoc;
+		myDocs = docs;
+		
+		read();
+	}
 	
 	public void read() {
 			
@@ -105,7 +87,7 @@ public class extractHTML {
 								File f = new File(this.outLocation + dir ); 
 								//create domain dir
 								if( !( f.isDirectory() ) ) {
-									f.mkdir();
+									f.mkdirs();
 								}
 								//create output file
 								writer = new BufferedWriter( new OutputStreamWriter( new FileOutputStream( new File( 
@@ -161,7 +143,5 @@ public class extractHTML {
 		return null;
 	}
 	
-	public static void main( String[] _args ) {
-		new extractHTML().read();
-	} 
+
 }

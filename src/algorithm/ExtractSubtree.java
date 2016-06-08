@@ -1,21 +1,7 @@
 package algorithm;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
-import org.htmlcleaner.TagNode;
-import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -75,7 +61,8 @@ public class ExtractSubtree {
 		//extract the template out of tree1 by template_nodes
 		RetrieveTemplate rt = new RetrieveTemplate(backtracking);
 		rt.getTemplate();
-		template_nodes = rt.getRes2();
+		template_nodes = rt.getRes();
+
 		
 	
 
@@ -92,11 +79,6 @@ public class ExtractSubtree {
 	
 	public Node getSmallestSubtree(){
 		SmallestSubtree(template_nodes, tree1);
-		
-	
-		
-
-		System.out.println("***"+template_nodes.size());
 		
 		return tree1;
 	}
@@ -119,7 +101,6 @@ public class ExtractSubtree {
 			if(containNode(_template_nodes, nl.item(p))){
 				
 				//is a template node -> go deeper
-				System.out.println("§§§"+nl.item(p).getNodeName());
 				
 				SmallestSubtree(_template_nodes,nl.item(p));
 				
@@ -127,8 +108,11 @@ public class ExtractSubtree {
 				
 				hasChanged = true;
 				
+				if(nl.item(p).getNodeName().equals("base")){
+					continue;
+				}
+				
 				//is no template node, dont go deeper
-				System.out.println("???"+nl.item(p).getNodeName());
 				nl.item(p).getParentNode().removeChild(nl.item(p));
 				p--;
 				
@@ -161,8 +145,11 @@ public class ExtractSubtree {
 				}else{ //is template node and has children -> check if the descendants are all templateNodes
 					
 					if(ContentTree(_template_nodes,nl.item(p))){ //in case yes -> delete all those nodes
-						nl.item(p).getParentNode().removeChild(nl.item(p));
-						p--;
+						if(!nl.item(p).getNodeName().equals("base")){
+							
+							nl.item(p).getParentNode().removeChild(nl.item(p));
+							p--;
+						}
 					}else{
 						justTemplateNodes = false; //-> dont delete the root
 					}
@@ -204,102 +191,6 @@ public class ExtractSubtree {
 		}
 		
 		return false;
-		
-	}
-
-
-
-
-//
-//	/**
-//	 * extract the smallest subtree of tree1
-//	 * taht contain all nodes of the template_nodes list
-//	 * check every node
-//	 * if it is not in the template_nodes list remove it
-//	 * @param _template list of template nodes
-//	 * @param _tree tree to extract from
-//	 * @return tree that only contain nodes that are in template_nodes
-//	 */
-//	public TagNode getSmallestSubtree(ArrayList<Integer> _template, TagNode _tree){
-//		
-//		TagNode templateTree = _tree;
-//		
-//		// get all nodes of the tree1
-//		ArrayList<TagNode> tn = new ArrayList<TagNode>();
-//		getDescendants(templateTree, tn);
-//		
-//
-//		
-//		//counter for removed nodes
-//		int o = 0;
-//		
-//		//check each node of tree1
-//		for( TagNode n : tn){
-//			
-//			int u = getHashOfNode(n);
-//			
-//			if(!_template.contains(u)){
-//				
-//				// for getting content remove length in if and template has to contain u
-//				if(n.getChildTags().length==0 && n.removeFromTree()){
-//					o++;
-//					//System.out.println(n.getName()+n.getAttributeByName("id"));
-//				}
-//				
-//			}
-//			
-//		}
-//		
-//		
-//		
-//		System.out.println(o+" Knoten gelöscht vom templateTree");
-//		
-//		return templateTree;
-//		
-//	}
-	
-	
-	/**
-	 * post order traversal of a given node
-	 * @param _node root node
-	 * @param _tagList ordered list
-	 */
-	private static void getDescendants(Node _node, ArrayList<Node> _tagList){
-		
-		NodeList a = _node.getChildNodes();
-		
-		for( int u=0; u<a.getLength(); u++){
-			
-			getDescendants(a.item(u), _tagList);
-			
-			_tagList.add(a.item(u));
-			
-			
-		}
-
-		
-	}
-	
-	
-	
-	/**
-	 * calculate hash of node by its name, and id,class,href attributes
-	 * @param _tn Node to hash
-	 * @return hash of this node
-	 */
-	private int getHashOfNode(TagNode _tn){
-		
-		String f = _tn.getName()+_tn.getAttributeByName("href")+_tn.getAttributeByName("alt")+_tn.getAttributeByName("title")+_tn.getAttributeByName("src");
-
-		
-		if(_tn.getChildTags().length == 0){
-			f += _tn.getText();
-		}
-		
-		return f.hashCode();
-		
-		
-//		return (_tn.getName()+_tn.getText()).hashCode();
 		
 	}
 

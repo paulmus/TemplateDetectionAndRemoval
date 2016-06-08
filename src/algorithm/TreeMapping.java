@@ -101,6 +101,8 @@ public class TreeMapping {
 		
 		for(int i = 1; i<=m ; i++){
 			for(int j = 1; j<=n ; j++){
+				
+				
 
 				
 				TreeMapping alg = null;
@@ -114,14 +116,16 @@ public class TreeMapping {
 				
 				if(identicalSubtree(tree1Childs.item(i-1),tree2Childs.item(j-1))){
 					
-					System.out.println("matchSubtree");
+					
+//					System.out.println("matchSubtree");
 					
 
 				}else if(identicalNode(tree1Childs.item(i-1),tree2Childs.item(j-1))){
 					
+
+
 					
-					
-					System.out.println("macthNode");
+//					System.out.println("macthNode");
 					alg = new TreeMapping();
 					N = S + alg.RTDM_TD(tree1Childs.item(i-1),tree2Childs.item(j-1));
 
@@ -130,12 +134,16 @@ public class TreeMapping {
 					
 					
 				}else{
+
 					
-					System.out.println("nomatch");
+//					System.out.println("nomatch");
 
 					S = S+1;
 					if(descendants1.get(i-1).isEmpty()){
 						S = S + descendants2.get(j-1).size();
+						if(tree1Childs.item(i-1).getNodeType() == Node.TEXT_NODE){ //special case of an single text node as leaf
+							S = -1;
+						}
 					}else if(descendants2.get(j-1).isEmpty()){
 						S = S + descendants1.get(i-1).size();
 					}else{
@@ -147,17 +155,19 @@ public class TreeMapping {
 				}
 				
 				if(S == -1 && N == -1){
+					
 					Cost[i][j] = Math.min(D,I);
-					System.out.println("D"+D+"I"+I);
+					
 				}else if(N == -1){
+					
 					Cost[i][j] = Math.min(D,I);
 					Cost[i][j] = Math.min(Cost[i][j],S);
-					System.out.println("D"+D+"I"+I+"S"+S);
+					
 				}else{
+					
 					Cost[i][j] = Math.min(D,I);
-//					Cost[i][j] = Math.min(Cost[i][j], S);
 					Cost[i][j] = Math.min(Cost[i][j],N);
-					System.out.println("D"+D+"I"+I+"S"+S+"N"+N);
+					
 				}
 				
 				backtracking[i][j] = new Backtracking();
@@ -212,33 +222,33 @@ public class TreeMapping {
 		
 		
 		
-		for(int i = 0; i<=m ; i++){
-			for(int j = 0; j<=n ; j++){
-				System.out.print(Cost[i][j]+" ");
-			}
-			System.out.println("");
-		}
-		System.out.println("");
+//		for(int i = 0; i<=m ; i++){
+//			for(int j = 0; j<=n ; j++){
+//				System.out.print(Cost[i][j]+" ");
+//			}
+//			System.out.println("");
+//		}
+//		System.out.println("");
 		
 		
-		for(int i = 1; i<=m ; i++){
-			String cost = "";
-			String src ="";
-			String ma = "";
-			for(int j = 1; j<=n ; j++){
-				
-				cost += backtracking[i][j].getCost()+"    ";
-				src += backtracking[i][j].getSource().getNodeName()+"  ";
-				ma += backtracking[i][j].getOperation()+"    ";
-				
-					
-			}
-			System.out.println(cost);
-			System.out.println(src);
-			System.out.println(ma);
-			System.out.println("");
-		}
-		System.out.println("");
+//		for(int i = 1; i<=m ; i++){
+//			String cost = "";
+//			String src ="";
+//			String ma = "";
+//			for(int j = 1; j<=n ; j++){
+//				
+//				cost += backtracking[i][j].getCost()+"    ";
+//				src += backtracking[i][j].getSource().getNodeName()+"  ";
+//				ma += backtracking[i][j].getOperation()+"    ";
+//				
+//					
+//			}
+//			System.out.println(cost);
+//			System.out.println(src);
+//			System.out.println(ma);
+//			System.out.println("");
+//		}
+//		System.out.println("");
 		
 
 		
@@ -291,16 +301,13 @@ public class TreeMapping {
 
 	private boolean identicalSubtree(Node node1, Node node2) {
 		
-		System.out.println("compare "+node1.getNodeName()+node2.getNodeName()+node1.getTextContent().trim());
-		
 		//primitive Node
 		if(node1.getNodeType() == Node.TEXT_NODE && node2.getNodeType() == Node.TEXT_NODE){
 			if(node1.getTextContent().equals(node2.getTextContent())){
-				//System.out.println("true");
 				return true;
 			}else{
-				//System.out.println("false");
 				return false;
+				
 			}
 		}
 		
@@ -310,14 +317,9 @@ public class TreeMapping {
 			NodeList o = node1.getChildNodes();
 			NodeList p = node2.getChildNodes();
 			
-			//System.out.println(node1.getNodeName());
 			for( int i = 0; i<o.getLength(); i++){
-				//System.out.println("recursion"+o.item(i).getNodeName());
 				if(!identicalSubtree(o.item(i),p.item(i))){
 					
-
-						//System.out.println("################"+node1.getNodeName()+o.item(i).getTextContent()+p.item(i).getTextContent());
-					//System.out.println("subpoutr");
 					return false;
 				}
 			}
@@ -325,7 +327,7 @@ public class TreeMapping {
 			return true;
 			
 		}else{
-			//System.out.println("mainout");
+
 			return false;
 		}
 		
@@ -338,11 +340,9 @@ public class TreeMapping {
 
 	private boolean identicalNode(Node _tagNode1, Node _tagNode2) {
 		
-//		System.out.println(_tagNode1.getName()+_tagNode2.getName());
-		
-//		System.out.println(_tagNode1.getNodeValue());
-		
-		if(_tagNode1.getNodeType() != Node.TEXT_NODE){
+
+
+		if(_tagNode1.getNodeType() != Node.TEXT_NODE && _tagNode2.getNodeType() != Node.TEXT_NODE){
 			
 			String a = _tagNode1.getNodeName();
 //			NamedNodeMap NNM1 = _tagNode1.getAttributes();
@@ -359,7 +359,6 @@ public class TreeMapping {
 //				System.out.println(NNM2.item(q).getNodeName()+NNM2.item(q).getTextContent());
 //			}
 			
-//			System.out.println("equalNode"+a+b);
 			
 			if(a.equals(b)){
 				return true;
@@ -379,6 +378,7 @@ public class TreeMapping {
 		
 	}
 
+	
 	private static void getDescendants(Node _node, ArrayList<Node> _tagList){
 		
 		NodeList a = _node.getChildNodes();

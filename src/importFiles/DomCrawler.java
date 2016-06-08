@@ -2,7 +2,6 @@ package importFiles;
 
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -19,23 +18,20 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.htmlcleaner.CleanerProperties;
-import org.htmlcleaner.HtmlCleaner;
-import org.htmlcleaner.SimpleHtmlSerializer;
-import org.htmlcleaner.TagNode;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 import algorithm.ExtractSubtree;
-import algorithm.TreeMapping;
 
 
 public class DomCrawler {
 	
 	
-	private final int MAX_DOCUMENTS_TEMPLATE = 15;
+	private final int MAX_DOCUMENTS_TEMPLATE = 10;
 	
 	private Document templateTree = null;
+	
+	private Document manualTemplateTree = null;
 	
 	ArrayList<String> filenames = null;
 	
@@ -50,39 +46,27 @@ public class DomCrawler {
 	 */
 	ArrayList<Document> doms = null;
 	
-	/**
-	 * html cleaner config
-	 * http://htmlcleaner.sourceforge.net/parameters.php
-	 */
-	CleanerProperties props = new CleanerProperties();
+	ArrayList<Node> contentDoms = null;
 	
-	/**
-	 * serializer to output documents
-	 */
-	final SimpleHtmlSerializer htmlSerializer = new SimpleHtmlSerializer(props);
 	
+	public ArrayList<Node> getContentDoms() {
+		return contentDoms;
+	}
+
+	ArrayList<Node> templateDoms = null;
+	
+
 	int l = 0;
 	
 	public DomCrawler( String _folder ){
 		
 		
-		
-		//ignore comments
-		props.setOmitComments(true);
-		//remove script and style
-		props.setPruneTags("script,style");
-		
-		
 		folderName = _folder;
 		
 		//retrieve all documents in folder
-		getDoms();
+		readDoms();
 		
-		getTemplates();
-		
-		getTemplateDom();
-		
-		getContents();
+
 		
 
 		
@@ -95,9 +79,19 @@ public class DomCrawler {
 
 		
 	}
+	
+	public void processFolder(){
+		getTemplates();
+		
+		readTemplateDom();
+		
+		getContents();
+	}
 
 
-	private void getTemplateDom() {
+
+
+	private void readTemplateDom() {
 		
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder builder = null;
@@ -111,12 +105,8 @@ public class DomCrawler {
 	
 
 		
-		String templateFile = null;
-		if(folderName.endsWith("/")){
-			templateFile = "html/"+folderName+"template/template.html";
-		}else{
-			templateFile = "html/"+folderName+"/template/template.html";
-		}
+		String templateFile = "html/"+folderName+"/template/template.html";
+
 		
 		File f = new File(templateFile);
 		
@@ -132,16 +122,47 @@ public class DomCrawler {
 				}
 			
 			}catch(Exception e){
-				
+				e.printStackTrace();
 			}
 					
 					
+		}else{
+			System.err.println(templateFile+" nicht gefunden!");
+		}
+		
+		
+		
+		templateFile = "manually/"+folderName+".html";
+
+		
+		f = new File(templateFile);
+		
+		if(f.isFile() && f.exists()){
+
+			try{		
+				
+				Document doc = builder.parse(f);
+
+					
+				if(doc != null){
+					manualTemplateTree = doc;
+				}
+			
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+					
+					
+		}else{
+			System.err.println("Manuelles Template existiert nicht!");
 		}
 		
 
 		
 	}
 
+
+	
 
 	private void getTemplates(){
 		
@@ -153,6 +174,9 @@ public class DomCrawler {
 		if(max > doms.size()){
 			max = doms.size();
 		}
+		
+		File lk = new File("html/"+folderName+"/template/");
+		lk.mkdirs();
 		
 		Node resultTree = null;
 		
@@ -183,17 +207,24 @@ public class DomCrawler {
 				
 			}
 			
+			if(templateDoms != null){
+				templateDoms.add(resultTree.cloneNode(true));
+			}else{
+				templateDoms = new ArrayList<Node>();
+				templateDoms.add(resultTree.cloneNode(true));
+			}
+			
 			if(es.isHasChanged()){ //if has changed output file
 				try {
 					
 					File f = null;
-					if(i == MAX_DOCUMENTS_TEMPLATE-1){
-						f = new File("html/"+folderName+"/template/template.html");
-						
-					}else{
-						f = new File("html/"+folderName+"/template/"+(counter++)+".html");
-						
-					}
+
+					f = new File("html/"+folderName+"/template/template.html");
+
+					//f = new File("html/"+folderName+"/template/"+(counter++)+".html");
+					//output all templates
+
+					
 					f.createNewFile();
 					FileOutputStream fos = new FileOutputStream(f);
 					printDocument(resultTree,fos);
@@ -215,11 +246,22 @@ public class DomCrawler {
 		
 		Node resultTree = null;
 		
+		File lk = new File("html/"+folderName+"/content/");
+		lk.mkdirs();
+		
 		//process the documents
 		for(int i = 0; i<doms.size(); i++){
 			
 			ExtractSubtree es = new ExtractSubtree(doms.get(i),templateTree);
 			resultTree = es.getContentTree();
+			
+			if(contentDoms != null){
+				contentDoms.add(resultTree.cloneNode(true));
+			}else{
+				contentDoms = new ArrayList<Node>();
+				contentDoms.add(resultTree.cloneNode(true));
+			}
+			
 			
 
 			try {
@@ -245,7 +287,7 @@ public class DomCrawler {
 	 * retrieve all doms from the specified folder 
 	 * add thme to the list of doms
 	 */
-	private void getDoms(){
+	private void readDoms(){
 		
 
 		
@@ -262,12 +304,8 @@ public class DomCrawler {
 		int q = 0;
 
 		
-		String newFolder = null;
-		if(folderName.endsWith("/")){
-			newFolder = "html/"+folderName+"cleaned";
-		}else{
-			newFolder = "html/"+folderName+"/cleaned";
-		}
+		String newFolder = "html/"+folderName+"/cleaned";
+
 		
 		File f = new File(newFolder);
 		
@@ -288,7 +326,6 @@ public class DomCrawler {
 				//remove hidden files
 				if(!z.isHidden()){
 					
-					System.out.println(z.getName()+q++);
 					
 					try{		
 						
@@ -334,6 +371,26 @@ public class DomCrawler {
 	
 
 	
+	public ArrayList<Document> getDoms() {
+		return doms;
+	}
+	
+	public Document getTemplateTree() {
+		return templateTree;
+	}
+
+	public ArrayList<String> getFilenames() {
+		return filenames;
+	}
+
+	public String getFolderName() {
+		return folderName;
+	}
+	
+	public Document getManualTemplateTree() {
+		return manualTemplateTree;
+	}
+
 	public static void printDocument(Node doc, OutputStream out) throws IOException, TransformerException {
 	    TransformerFactory tf = TransformerFactory.newInstance();
 	    Transformer transformer = tf.newTransformer();
@@ -347,8 +404,5 @@ public class DomCrawler {
 	         new StreamResult(new OutputStreamWriter(out, "UTF-8")));
 	}
 	
-	public static void main(String[] args){
-		new DomCrawler("scheufelen.com");
-	}
 
 }
