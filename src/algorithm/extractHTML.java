@@ -10,8 +10,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class extractHTML {
 
@@ -25,6 +23,9 @@ public class extractHTML {
 	 * */
 	String outLocation = "html/";
 	
+	/**
+	 * list of docs to extract
+	 */
 	ArrayList<String> myDocs = null;
 	
 
@@ -36,6 +37,9 @@ public class extractHTML {
 		read();
 	}
 	
+	/**
+	 * read in the trecweb file and export every fitting document to a single file
+	 */
 	public void read() {
 			
 			BufferedReader reader = null;
@@ -127,6 +131,11 @@ public class extractHTML {
 			}
 	}
 	
+	/**
+	 * check if the Doc in the TrecWeb is in the doc list
+	 * @param _docTxt 
+	 * @return the url of the fitting file
+	 */
 	private String analyseHdr( String _docTxt ) {
 
 		String hdr = _docTxt.substring( _docTxt.indexOf("<DOCHDR>"), _docTxt.indexOf( "</DOCHDR>" ) );

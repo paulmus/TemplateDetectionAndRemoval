@@ -9,14 +9,28 @@ import org.w3c.dom.NodeList;
 
 
 
+/**
+ * @author paulmuschiol
+ * process a tree mapping from tree1 to tree2
+ */
 public class TreeMapping {
 	
 	Node tree1 = null;
 	Node tree2 = null;
 	
+	/**
+	 * a list of descendants for each child node of the root element for tree1
+	 */
 	ArrayList<ArrayList<Node>> descendants1 = null;
+	
+	/**
+	 * a list of descendants for each child node of the root element for tree2
+	 */
 	ArrayList<ArrayList<Node>> descendants2 = null;
 	
+	/**
+	 * the resulting matrix
+	 */
 	Backtracking[][] backtracking;
 	
 	
@@ -30,6 +44,7 @@ public class TreeMapping {
 		tree1 = _node1;
 		tree2 = _node2;
 		
+		//remove blank text nodes
 		removeEmptyNodes(tree1);
 		removeEmptyNodes(tree2);
 		
@@ -38,6 +53,7 @@ public class TreeMapping {
 		int m = tree1.getChildNodes().getLength();
 		int n = tree2.getChildNodes().getLength();
 		
+		//initialise cost matrix
 		Cost = new int[m+1][n+1];
 		Cost[0][0] = 0;
 		backtracking = new Backtracking[m+1][n+1];
@@ -47,14 +63,7 @@ public class TreeMapping {
 		
 		NodeList tree1Childs = tree1.getChildNodes();
 		NodeList tree2Childs = tree2.getChildNodes();
-				
 
-		
-		
-		
-		
-		
-		
 		
 		descendants1 = new ArrayList<ArrayList<Node>>();
 		descendants2 = new ArrayList<ArrayList<Node>>();
@@ -62,6 +71,7 @@ public class TreeMapping {
 		
 		int temp = 1;
 		
+		//initialise left and top column of the matrix and add all descendants for the childs
 		for( int i=0; i<tree1Childs.getLength(); i++){
 			//post order traversal for child node i
 			ArrayList<Node> t = new ArrayList<Node>();
@@ -98,7 +108,7 @@ public class TreeMapping {
 		}
 		
 		
-		
+		//actual process of mapping
 		for(int i = 1; i<=m ; i++){
 			for(int j = 1; j<=n ; j++){
 				
@@ -109,23 +119,25 @@ public class TreeMapping {
 				Backtracking[][] B = null;
 				int Ci = descendants1.get(i-1).size();//check costs
 				int Cj = descendants2.get(j-1).size();
-				int D = Cost[i-1][j] + Ci +1;
-				int I = Cost[i][j-1] + Cj +1;
-				int S = Cost[i-1][j-1];
+				int D = Cost[i-1][j] + Ci +1; //delete cost all descendants + node itself
+				int I = Cost[i][j-1] + Cj +1; //insert cost all descendants + node itself
+				int S = Cost[i-1][j-1]; //cost if nothing changes
 				int N = -1;
 				
 				if(identicalSubtree(tree1Childs.item(i-1),tree2Childs.item(j-1))){
-					
+					//full match
 					
 //					System.out.println("matchSubtree");
 					
 
 				}else if(identicalNode(tree1Childs.item(i-1),tree2Childs.item(j-1))){
 					
-
+					//just identical node 
+					//different handling on text nodes -> compare content
 
 					
 //					System.out.println("macthNode");
+					//recursive call
 					alg = new TreeMapping();
 					N = S + alg.RTDM_TD(tree1Childs.item(i-1),tree2Childs.item(j-1));
 
@@ -138,13 +150,13 @@ public class TreeMapping {
 					
 //					System.out.println("nomatch");
 
-					S = S+1;
-					if(descendants1.get(i-1).isEmpty()){
+					S = S+1; //replace node
+					if(descendants1.get(i-1).isEmpty()){ //delete all descs
 						S = S + descendants2.get(j-1).size();
 						if(tree1Childs.item(i-1).getNodeType() == Node.TEXT_NODE){ //special case of an single text node as leaf
 							S = -1;
 						}
-					}else if(descendants2.get(j-1).isEmpty()){
+					}else if(descendants2.get(j-1).isEmpty()){ //insert all descs
 						S = S + descendants1.get(i-1).size();
 					}else{
 						// nothing is an leaf -> delete or insert this node
@@ -154,6 +166,7 @@ public class TreeMapping {
 					
 				}
 				
+				//calc min costs
 				if(S == -1 && N == -1){
 					
 					Cost[i][j] = Math.min(D,I);
@@ -217,7 +230,7 @@ public class TreeMapping {
 		
 		
 		
-		
+		//output matrix
 
 		
 		
@@ -271,6 +284,11 @@ public class TreeMapping {
 	}
 	
 	
+	/**
+	 * remove all empty text nodes
+	 * @param _n root node to work on
+	 * @return cleaned node
+	 */
 	private static Node removeEmptyNodes(Node _n){
 		NodeList children = _n.getChildNodes();
 		
@@ -290,18 +308,22 @@ public class TreeMapping {
 	}
 	
 	
-	public Backtracking[][] getBacktracking() {
-		return backtracking;
-	}
+
 	
 //	The two nodes are of the same type.
 //	The following string attributes are equal: nodeName, localName, namespaceURI, prefix, nodeValue . This is: they are both null, or they have the same length and are character for character identical.
 //	The attributes NamedNodeMaps are equal. This is: they are both null, or they have the same length and for each node that exists in one map there is a node that exists in the other map and is equal, although not necessarily at the same index.
 //	The childNodes NodeLists are equal. This is: they are both null, or they have the same length and contain equal nodes at the same index. Note that normalization can affect equality; to avoid this, nodes should be normalized before being compared.
 
+	/**
+	 * full check of similarity see above
+	 * @param node1 first root node
+	 * @param node2 second root node
+	 * @return if there is a full match
+	 */
 	private boolean identicalSubtree(Node node1, Node node2) {
 		
-		//primitive Node
+		//primitive Node -> Text
 		if(node1.getNodeType() == Node.TEXT_NODE && node2.getNodeType() == Node.TEXT_NODE){
 			if(node1.getTextContent().equals(node2.getTextContent())){
 				return true;
@@ -311,7 +333,7 @@ public class TreeMapping {
 			}
 		}
 		
-		
+		//complex node, check child and everything else
 		if(node1.isEqualNode(node2)){
 			
 			NodeList o = node1.getChildNodes();
@@ -338,6 +360,13 @@ public class TreeMapping {
 
 
 
+	/**
+	 * just check if the node type is the same
+	 * if they are both text  nodes compare the text
+	 * @param _tagNode1 first root
+	 * @param _tagNode2 second root
+	 * @return if they are the same
+	 */
 	private boolean identicalNode(Node _tagNode1, Node _tagNode2) {
 		
 
@@ -379,6 +408,11 @@ public class TreeMapping {
 	}
 
 	
+	/**
+	 * postorder traversal of the tree (recursive)
+	 * @param _node root node
+	 * @param _tagList list to add to
+	 */
 	private static void getDescendants(Node _node, ArrayList<Node> _tagList){
 		
 		NodeList a = _node.getChildNodes();
@@ -393,6 +427,10 @@ public class TreeMapping {
 		}
 
 		
+	}
+	
+	public Backtracking[][] getBacktracking() {
+		return backtracking;
 	}
 
 

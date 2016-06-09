@@ -7,7 +7,7 @@ import org.w3c.dom.NodeList;
 
 /**
  * @author paulmuschiol
- *
+ * retrieve the template from the backtracking matrix
  */
 public class RetrieveTemplate {
 	
@@ -31,8 +31,15 @@ public class RetrieveTemplate {
 	
 
 	
+	/**
+	 * list of nodes that are retrieved
+	 */
 	ArrayList<Node> res = null;
 	
+	/**
+	 * initialise variables
+	 * @param _backtracking matrix
+	 */
 	public RetrieveTemplate(Backtracking[][] _backtracking){
 		B = _backtracking;
 		
@@ -86,6 +93,7 @@ public class RetrieveTemplate {
 	
 				res.add(src);
 				
+				//add all descendants
 				if(src.hasChildNodes()){
 					ArrayList<Node> d = new ArrayList<Node>();
 					getDescendants(src,d);
@@ -110,17 +118,6 @@ public class RetrieveTemplate {
 				res.addAll(recursive.getRes());
 				
 				
-				
-//				if(recursive.getRes2().isEmpty()){ // there is an duplicate node inside
-//					//dont add it, because there is an left fitting node maybe
-//					j--;
-//				}else{
-//					res2.add(src);
-//					res2.addAll(recursive.getRes2());
-//					i--;
-//					j--;
-//				}
-				
 				i--;
 				j--;
 
@@ -128,7 +125,7 @@ public class RetrieveTemplate {
 				
 				
 				//go left and up
-			}else{
+			}else{ //nothing to get
 				i--;
 				j--;
 			}

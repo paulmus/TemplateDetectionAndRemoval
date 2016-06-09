@@ -24,15 +24,31 @@ import org.w3c.dom.Node;
 import algorithm.ExtractSubtree;
 
 
+/**
+ * @author paulmuschiol
+ * read in and handle the dom trees of the domain
+ */
 public class DomCrawler {
 	
 	
+	/**
+	 * Maximum number of files for template detection
+	 */
 	private final int MAX_DOCUMENTS_TEMPLATE = 10;
 	
+	/**
+	 * the final template tree
+	 */
 	private Document templateTree = null;
 	
+	/**
+	 * manually detected template tree
+	 */
 	private Document manualTemplateTree = null;
 	
+	/**
+	 * filenames of the files working on
+	 */
 	ArrayList<String> filenames = null;
 	
 	
@@ -46,13 +62,14 @@ public class DomCrawler {
 	 */
 	ArrayList<Document> doms = null;
 	
+	/**
+	 * list of the doms just containing the content
+	 */
 	ArrayList<Node> contentDoms = null;
-	
-	
-	public ArrayList<Node> getContentDoms() {
-		return contentDoms;
-	}
 
+	/**
+	 * all produced template doms
+	 */
 	ArrayList<Node> templateDoms = null;
 	
 
@@ -65,21 +82,14 @@ public class DomCrawler {
 		
 		//retrieve all documents in folder
 		readDoms();
-		
-
-		
-
-		
-		
-			
-			
-		
-		
-
 
 		
 	}
 	
+	/**
+	 * retreive the template
+	 * and remove the templates
+	 */
 	public void processFolder(){
 		getTemplates();
 		
@@ -91,6 +101,10 @@ public class DomCrawler {
 
 
 
+	/**
+	 * read in the final template dom from file
+	 * and the manually created template dom
+	 */
 	private void readTemplateDom() {
 		
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -99,7 +113,6 @@ public class DomCrawler {
 		try {
 			builder = factory.newDocumentBuilder();
 		} catch (ParserConfigurationException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 	
@@ -164,6 +177,11 @@ public class DomCrawler {
 
 	
 
+	/**
+	 * first map the first and second template against each other
+	 * then map the result to the next file
+	 * loop for extract subtree
+	 */
 	private void getTemplates(){
 		
 		
@@ -183,10 +201,9 @@ public class DomCrawler {
 		//process the documents
 		for(int i = 0; i<max; i++){
 			
-			System.out.println("#"+i);
-			
 			ExtractSubtree es = null;
 			
+			//first round
 			if(resultTree == null){
 				
 				es = new ExtractSubtree(doms.get(0),doms.get(1));
@@ -195,7 +212,7 @@ public class DomCrawler {
 				
 				resultTree = es.getSmallestSubtree();
 				
-			}else{
+			}else{//following trees
 				
 	
 				es = new ExtractSubtree(resultTree,doms.get(i));
@@ -207,6 +224,7 @@ public class DomCrawler {
 				
 			}
 			
+			//add the tree to the list
 			if(templateDoms != null){
 				templateDoms.add(resultTree.cloneNode(true));
 			}else{
@@ -230,10 +248,8 @@ public class DomCrawler {
 					printDocument(resultTree,fos);
 					fos.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (TransformerException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -241,6 +257,10 @@ public class DomCrawler {
 	}
 	
 	
+	/**
+	 * map the result template tree to the files again
+	 * but now extract the content and not the template
+	 */
 	private void getContents(){
 		
 		
@@ -264,7 +284,7 @@ public class DomCrawler {
 			
 			
 
-			try {
+			try { //output every file to a new file
 				
 				File f = new File("html/"+folderName+"/content/"+filenames.get(i));
 				f.createNewFile();
@@ -272,10 +292,8 @@ public class DomCrawler {
 				printDocument(resultTree,fos);
 				fos.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (TransformerException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			
@@ -296,12 +314,8 @@ public class DomCrawler {
 		try {
 			builder = factory.newDocumentBuilder();
 		} catch (ParserConfigurationException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		
-
-		int q = 0;
 
 		
 		String newFolder = "html/"+folderName+"/cleaned";
@@ -390,7 +404,18 @@ public class DomCrawler {
 	public Document getManualTemplateTree() {
 		return manualTemplateTree;
 	}
+	
+	public ArrayList<Node> getContentDoms() {
+		return contentDoms;
+	}
 
+	/**
+	 * print doc to output stream
+	 * @param doc
+	 * @param out
+	 * @throws IOException
+	 * @throws TransformerException
+	 */
 	public static void printDocument(Node doc, OutputStream out) throws IOException, TransformerException {
 	    TransformerFactory tf = TransformerFactory.newInstance();
 	    Transformer transformer = tf.newTransformer();

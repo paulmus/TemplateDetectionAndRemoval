@@ -5,6 +5,12 @@ import java.util.ArrayList;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+/**
+ * @author paulmuschiol
+ * can extract the template subtree (tree1 = template tree, tree2 = new tree)
+ * or content tree (tree1 = new tree, tree2 = template tree)
+ * call rtdm-td and retrieve template
+ */
 public class ExtractSubtree {
 	
 	
@@ -37,6 +43,14 @@ public class ExtractSubtree {
 
 	
 	
+	/**
+	 * constructor
+	 * already process the rtdm, retrieve Template
+	 * but no extraction
+	 * work on a copy of the tree
+	 * @param _tree1 first tree to map from
+	 * @param _tree2 second tree to map to
+	 */
 	public ExtractSubtree(Node _tree1, Node _tree2){
 		
 		//initialise
@@ -77,6 +91,10 @@ public class ExtractSubtree {
 		
 	}
 	
+	/**
+	 * get the smallest template tree
+	 * @return template tree
+	 */
 	public Node getSmallestSubtree(){
 		SmallestSubtree(template_nodes, tree1);
 		
@@ -84,6 +102,10 @@ public class ExtractSubtree {
 	}
 	
 	
+	/**
+	 * get the content tree
+	 * @return content tree
+	 */
 	public Node getContentTree(){
 		ContentTree(template_nodes, tree1);
 		
@@ -92,6 +114,12 @@ public class ExtractSubtree {
 	
 
 
+	/**
+	 * preorder traversal of the tree
+	 * delete every node that doesnt belong to template
+	 * @param _template_nodes list of template nodes from retrieve template
+	 * @param _node
+	 */
 	private void SmallestSubtree(ArrayList<Node> _template_nodes, Node _node) {
 		
 		NodeList nl = _node.getChildNodes();
@@ -114,7 +142,7 @@ public class ExtractSubtree {
 				
 				//is no template node, dont go deeper
 				nl.item(p).getParentNode().removeChild(nl.item(p));
-				p--;
+				p--; //fix because list gets smaller
 				
 			}
 			
@@ -127,6 +155,15 @@ public class ExtractSubtree {
 	}
 	
 	
+	/**
+	 * preorder traversal of the given tree (recursive)
+	 * delete node if it is template 
+	 * either it has no children or all children are template nodes
+	 * else the nodes will remain on the tree
+	 * @param _template_nodes list of template nodes
+	 * @param _node tree to work on
+	 * @return if parent can be deleted -> all descendants are template
+	 */
 	private boolean ContentTree(ArrayList<Node> _template_nodes, Node _node){
 		
 		NodeList nl = _node.getChildNodes();
@@ -140,7 +177,7 @@ public class ExtractSubtree {
 				if(!nl.item(p).hasChildNodes()){ //is template node and has no children -> delete child node
 					
 					nl.item(p).getParentNode().removeChild(nl.item(p));
-					p--;
+					p--; //fix, because of change in nodelist
 					
 				}else{ //is template node and has children -> check if the descendants are all templateNodes
 					
@@ -178,6 +215,13 @@ public class ExtractSubtree {
 
 
 	
+	/**
+	 * helping function to check if this node is in the list
+	 * contain doenst work because there is a change in the equal function
+	 * @param _list list of nodes
+	 * @param _node node to check
+	 * @return if it contains
+	 */
 	private boolean containNode(ArrayList<Node> _list, Node _node){
 		
 		

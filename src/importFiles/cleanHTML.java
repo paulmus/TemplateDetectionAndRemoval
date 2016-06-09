@@ -3,17 +3,17 @@ package importFiles;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 
 import org.htmlcleaner.CleanerProperties;
 import org.htmlcleaner.HtmlCleaner;
-import org.htmlcleaner.SimpleHtmlSerializer;
 import org.htmlcleaner.SimpleXmlSerializer;
 import org.htmlcleaner.TagNode;
-import org.w3c.tidy.Tidy;
 
+/**
+ * @author paulmuschiol
+ * produce valid xml files of extracted files
+ */
 public class cleanHTML {
 	
 	
@@ -35,24 +35,28 @@ public class cleanHTML {
 
 	}
 	
+	/**
+	 * read in file 
+	 * correct it 
+	 * output valid xml
+	 * @param _file file to parse
+	 */
 	public void cleanFile(String _file){
 		
 		
 		
-		//ignore comments
+		//parser configuration
 		props.setOmitComments(true);
 		props.setTransResCharsToNCR(true);
-		
 		props.setTranslateSpecialEntities(true);
-		
 		props.setNamespacesAware(false);
-		
 		props.setAdvancedXmlEscape(false);
 		
 		
 
 		
 		try{
+			//read in
 			File inputFile = new File(_file.substring(0, _file.length()-1));
 			FileInputStream fis = new FileInputStream( inputFile );
 			
@@ -73,6 +77,7 @@ public class cleanHTML {
 				}
 			}
 			
+			//output cleaned file
 			newPathname += "/cleaned";
 			File newPath = new File(newPathname);
 			if(!newPath.exists()){
@@ -80,36 +85,6 @@ public class cleanHTML {
 			}
 			
 			String finalFilename = newPathname+newFilename;
-			
-
-			
-//			File outputFile = new File(finalFilename);
-//			if(!outputFile.exists()){
-//				if(!outputFile.createNewFile()){
-//					System.err.println("Dateifehler");
-//				}
-//			}else{
-//				if(!outputFile.delete()){
-//					System.err.println("Dateifehler");
-//				}
-//				if(!outputFile.createNewFile()){
-//					System.err.println("Dateifehler");
-//				}
-//
-//			}
-			
-//			FileOutputStream fos = new FileOutputStream(outputFile);
-			
-//			PrintWriter pw = new PrintWriter(fos);
-//			pw.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<body>\n");
-//			pw.flush();
-//			pw.close();
-			
-
-//			pw = new PrintWriter(fos);
-//			pw.write("</body>\n");
-//			pw.flush();
-//			pw.close();
 			
 			
 			
@@ -129,6 +104,10 @@ public class cleanHTML {
 		
 	}
 	
+	/**
+	 * check folder for subfolders and clean all html files inside
+	 * @param _path path to check
+	 */
 	public void cleanAllFiles(String _path){
 		
 		File f = new File(_path);
